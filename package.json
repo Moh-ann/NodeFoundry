@@ -2,11 +2,11 @@
   "name": "server",
   "version": "1.0.0",
   "main": "server.js",
-  "type": "module",
   "moduleResolution": "node",
+  "type": "module",
   "scripts": {
     "start": "node dist/server.js",
-    "dev": "nodemon server",
+    "dev": "tsc-watch --onSuccess \"node dist/server.js\"",
     "build": "tsc"
   },
   "keywords": [],
@@ -23,6 +23,7 @@
     "express-async-handler": "^1.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.7.3",
+    "tsc-watch": "^7.2.0",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
