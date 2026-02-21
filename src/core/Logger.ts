@@ -8,11 +8,11 @@ let dir = logDirectory ?? "logs"
 
 if(!dir) dir = path.resolve("logs")
 
-    if(!fs.existsSync(dir)){
-        fs.mkdirSync(dir)
-    }
+if(!fs.existsSync(dir)){
+    fs.mkdirSync(dir)
+}
 
-const logLevel = environment === "develooment" ? "debug" :"warn"
+const logLevel = environment === "development" ? "debug" : "warn"
 
 const dailyRotateFile = new DailyRotateFile({
     level: logLevel,
@@ -30,7 +30,7 @@ const dailyRotateFile = new DailyRotateFile({
 })
 
 export default createLogger({
-    transports:[
+    transports: [
         new transports.Console({
             level: logLevel,
             format: format.combine(
