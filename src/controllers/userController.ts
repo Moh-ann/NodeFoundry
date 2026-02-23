@@ -4,6 +4,7 @@ import generateToken from "../utils/generateToken.js"
 import type { ProtectedRequest } from "../../types/app-request.js"
 import type { Response } from "express"
 import type mongoose from "mongoose"
+import { BadRequestError } from "../core/CustomError.js"
 
 const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
   const { email, password } = req.body
@@ -18,8 +19,7 @@ const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
       email: user.email,
     })
   } else {
-    res.status(401)
-    throw new Error(" Invalid email or password")
+    throw new BadRequestError(" Invalid email or password")
   }
 })
 
