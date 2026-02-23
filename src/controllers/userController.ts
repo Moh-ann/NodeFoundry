@@ -5,9 +5,16 @@ import type { ProtectedRequest } from "../../types/app-request.js"
 import type { Response } from "express"
 import type mongoose from "mongoose"
 import { BadRequestError } from "../core/CustomError.js"
+import { userLoginSchema } from "../routes/userSchema.js"
 
 const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
   const { email, password } = req.body
+
+  const data = userLoginSchema.safeParse({ email, password})
+
+  if(!data.success){
+    throw new BadRequestError("Invalid User Credentials")
+  }
 
   const user = await User.findOne({ email })
 
@@ -19,7 +26,7 @@ const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
       email: user.email,
     })
   } else {
-    throw new BadRequestError(" Invalid email or password")
+    throw new BadRequestError("Invalid User Credentials")
   }
 })
 
