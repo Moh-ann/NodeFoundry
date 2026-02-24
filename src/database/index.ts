@@ -2,8 +2,15 @@ import mongoose from "mongoose"
 import Logger from "../core/Logger.js"
 import { db, environment } from "../config.js"
 
-// Build the connection string
-const dbURI = `mongodb://${db.user}:${encodeURIComponent(db.password)}@${db.host}:${db.port}/${db.name}`
+let dbURI: string
+
+if (db.user && db.password) {
+  dbURI = `mongodb://${db.user}:${encodeURIComponent(db.password)}@${db.host}:${db.port}/${db.name}`
+} else {
+  dbURI = `mongodb://${db.host}:${db.port}/${db.name}`
+}
+
+export { dbURI }
 
 const options = {
   autoIndex: true,
