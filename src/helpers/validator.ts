@@ -5,7 +5,7 @@ import { BadRequestError } from "../core/CustomError.js"
 export enum ValidationSource {
     BODY = "body",
     QUERY = "query",
-    HEADER = "header",
+    HEADER = "headers",
     PARAM = "params",
 }
 
