@@ -10,10 +10,11 @@ import apiKey from "../auth/apiKey.js"
 
 const router = express.Router()
 
-router.use(apiKey)
-
 router.route("/login").post(validateRequest(userLoginSchema, ValidationSource.BODY), loginUser)
 router.route("/register").post(registerUser)
+
+router.use(apiKey)
+
 router.route("/logout").get(logoutUser)
 
 export default router
