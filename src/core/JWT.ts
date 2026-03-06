@@ -1,4 +1,5 @@
-import { sign, type SignOptions, decode as jwtDecode, verify } from "jsonwebtoken"
+import jwt, { type SignOptions } from "jsonwebtoken"
+const { sign, verify, decode: jwtDecode } = jwt
 import {
   BadRequestError,
   BadTokenError,

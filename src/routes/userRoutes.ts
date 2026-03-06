@@ -2,18 +2,23 @@ import express from "express"
 import {
   loginUser,
   logoutUser,
+  refreshAccessToken,
   registerUser,
 } from "../controllers/userController.js"
 import validateRequest, { ValidationSource } from "../helpers/validator.js"
-import { userLoginSchema } from "./userSchema.js"
+import { refreshTokenSchema, userLoginSchema, userRegisterSchema } from "./userSchema.js"
 import apiKey from "../auth/apiKey.js"
 
 const router = express.Router()
 
 router.route("/login").post(validateRequest(userLoginSchema, ValidationSource.BODY), loginUser)
-router.route("/register").post(registerUser)
+router.route("/register").post(validateRequest(userRegisterSchema, ValidationSource.BODY), registerUser)
+
+router.route("/refresh").post(validateRequest(refreshTokenSchema, ValidationSource.BODY), refreshAccessToken)
 
 router.use(apiKey)
+
+
 
 router.route("/logout").get(logoutUser)
 

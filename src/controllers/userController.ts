@@ -1,3 +1,4 @@
+import crypto from "crypto"
 import User from "../models/userModel.js"
 import asyncHandler from "express-async-handler"
 import generateToken from "../utils/generateToken.js"
@@ -6,6 +7,12 @@ import type { Response } from "express"
 import type mongoose from "mongoose"
 import { BadRequestError } from "../core/CustomError.js"
 import { userLoginSchema } from "../routes/userSchema.js"
+import { create } from "./KeyStoreController.js"
+import { environment, tokenInfo } from "../config.js"
+import { createTokens, getAccessToken, validateTokenData } from "../auth/utils.js"
+import JWT from "../core/JWT.js"
+import { Types } from "mongoose"
+import { KeyStoreModel } from "../models/KeyStoreModel.js"
 
 const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
   const { email, password } = req.body
@@ -19,6 +26,24 @@ const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
   const user = await User.findOne({ email })
 
   if (user && (await user?.matchPassword?.(password))) {
+    const accessTokenKey = crypto.randomBytes(64).toString("hex")
+    const refreshTokenKey = crypto.randomBytes(64).toString("hex")
+    await create(user, accessTokenKey, refreshTokenKey)
+    const tokens = await createTokens(user, accessTokenKey, refreshTokenKey)
+
+    res.cookie("accessToken", tokens.accessToken, {
+      httpOnly: true,
+      secure: environment === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    })
+    res.cookie("refreshToken", tokens.refreshToken, {
+      httpOnly: true,
+      secure: environment === "production",
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000, 
+    })
+    
     res.json({
       _id: user._id,
       name: user.name,
@@ -54,6 +79,58 @@ const registerUser = asyncHandler(async (req: ProtectedRequest, res: Response) =
     throw new Error("Invalid User Credentials")
   }
 })
+
+export const refreshAccessToken = asyncHandler(
+  async (req: ProtectedRequest, res: Response) => {
+    req.accessToken = getAccessToken(req.headers.authorization)
+    
+    const accessTokenPayload = await JWT.decode(req.cookies.accessToken)
+    validateTokenData(accessTokenPayload)
+
+    const user = await User.findById(new Types.ObjectId(accessTokenPayload.sub))
+    if (!user) throw new BadRequestError("User not registered")
+    req.user = user
+
+    const refreshTokenPayload = await JWT.validate(
+      req.body.refreshToken,
+      tokenInfo.secret
+    )
+    validateTokenData(refreshTokenPayload)
+
+    if (accessTokenPayload.sub !== refreshTokenPayload.sub)
+      throw new BadRequestError("Invalid access token")
+
+    const keystore = await KeyStoreModel.find({
+      client: req.user,
+      primaryKey: accessTokenPayload.prm,
+      secondaryKey: refreshTokenPayload.prm,
+    })
+
+    if (!keystore) throw new BadRequestError("Invalid access token")
+    await KeyStoreModel.deleteOne({
+      client: req.user,
+      primaryKey: accessTokenPayload.prm,
+      secondaryKey: refreshTokenPayload.prm,
+    })
+
+    const accessTokenKey = crypto.randomBytes(64).toString("hex")
+    const refreshTokenKey = crypto.randomBytes(64).toString("hex")
+
+    await create(req.user, accessTokenKey, refreshTokenKey)
+    const tokens = await createTokens(req.user, accessTokenKey, refreshTokenKey)
+
+    res.cookie("accessToken", tokens.accessToken, {
+      httpOnly: true,
+      secure: environment === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000, //ms
+    })
+
+    res.status(200).json({
+      message: "Access Token Refreshed",
+    })
+  }
+)
 
 // const forgotPassword = asyncHandler(async (req: ProtectedRequest, res: Response) => {
 //   const { email } = req.body
