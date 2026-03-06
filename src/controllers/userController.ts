@@ -19,7 +19,6 @@ const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
   const user = await User.findOne({ email })
 
   if (user && (await user?.matchPassword?.(password))) {
-    generateToken(res, user._id as mongoose.Types.ObjectId)
     res.json({
       _id: user._id,
       name: user.name,

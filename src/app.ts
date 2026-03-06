@@ -22,28 +22,28 @@ app.use("/api/users", userRoutes)
 app.use("/api/todo", todoRoutes)
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    Logger.error(
+  if (err instanceof ApiError) {
+    ApiError.handle(err, res)
+
+    if (err.type === ErrorType.INTERNAL) {
+      Logger.error(
         `500 - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`
-    )
+      )
+    } else {
+      Logger.error(
+        `500 - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`
+      )
+    }
     Logger.error(err.stack)
 
-    if (res.headersSent) {
-        return next(err)
-    }
-
-    if (err instanceof ApiError) {
-        return ApiError.handle(err, res)
-    }
-
     if (environment === "development") {
-        return res.status(500).json({
-            type: "InternalError",
-            message: err.message,
-            stack: err.stack
-        })
+      res.status(500).send({
+        message: err.message,
+        stack: err.stack,
+      })
     }
-
-    return ApiError.handle(new InternalError(), res)
+  }
+  ApiError.handle(new InternalError(), res)
 })
 
 export default app

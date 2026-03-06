@@ -23,6 +23,7 @@
     "express": "^4.21.1",
     "express-async-handler": "^1.2.0",
     "jsonwebtoken": "^9.0.2",
+    "jwt": "^0.2.0",
     "mongoose": "^8.7.3",
     "tsc-watch": "^7.2.0",
     "typescript": "^5.9.3",

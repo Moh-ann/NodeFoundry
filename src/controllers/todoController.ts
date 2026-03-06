@@ -12,7 +12,11 @@ const createTodo = asyncHandler(async (req: ProtectedRequest, res: Response) => 
     throw new Error("Title and Description are required")
   }
 
-  await Todo.create({ user: req.user, title, description })
+  await Todo.create({
+  user: req.user._id,
+  title,
+  description,
+  })
 
   res.status(201).json({ title, description })
 })
@@ -20,7 +24,7 @@ const createTodo = asyncHandler(async (req: ProtectedRequest, res: Response) => 
 const getTodos = asyncHandler(async (req: ProtectedRequest, res: Response) => {
   const user = req.user
   const todos = await Todo.find({
-    user: user,
+  user: req.user._id,
   })
   res.json(todos)
 })
