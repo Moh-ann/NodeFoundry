@@ -15,7 +15,6 @@ import { validateTokenData } from "./utils.js"
 const router = express.Router()
 
 export default router.use(
-    validator(schema.auth, ValidationSource.HEADER),
   asyncHandler(
     async (req: ProtectedRequest, res: Response, next: NextFunction) => {
       try {

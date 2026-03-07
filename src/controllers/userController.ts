@@ -55,34 +55,55 @@ const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
 })
 
 const registerUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
-  const { name, email, password } = req.body
+  try {
+    const { name, email, password } = req.body
 
-  const userExists = await User.findOne({ email })
+    const userExists = await User.findOne({ email })
 
-  if (userExists) {
-    res.status(400)
-    throw new Error("User already Exists")
+    if (userExists) {
+      res.status(400).json({
+        message: "User already exists",
+    })
+    return
   }
 
   const user = await User.create({ name, email, password })
 
   if (user) {
-    generateToken(res, user._id as mongoose.Types.ObjectId)
-    res.status(201)
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-    })
-  } else {
-    res.status(400)
-    throw new Error("Invalid User Credentials")
+      const accessTokenKey = crypto.randomBytes(64).toString("hex")
+      const refreshTokenKey = crypto.randomBytes(64).toString("hex")
+      await create(user, accessTokenKey, refreshTokenKey)
+      const tokens = await createTokens(user, accessTokenKey, refreshTokenKey)
+
+      res.cookie("accessToken", tokens.accessToken, {
+        httpOnly: true,
+        secure: environment === "production",
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000, //ms
+      })
+      res.cookie("refreshToken", tokens.refreshToken, {
+        httpOnly: true,
+        secure: environment === "production",
+        sameSite: "strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000, //ms
+      })
+      res.status(201)
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      })
+    } else {
+      throw new BadRequestError("Invalid user credentials")
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: "Internal server error" })
   }
 })
 
 export const refreshAccessToken = asyncHandler(
   async (req: ProtectedRequest, res: Response) => {
-    req.accessToken = getAccessToken(req.headers.authorization)
     
     const accessTokenPayload = await JWT.decode(req.cookies.accessToken)
     validateTokenData(accessTokenPayload)
