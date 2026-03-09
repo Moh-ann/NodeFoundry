@@ -29,7 +29,7 @@ function setRunValidators() {
 mongoose.set("strictQuery", true)
 
 // Create the database connection
-mongoose
+if(environment !== "test"){mongoose
   .plugin((schema: any) => {
     schema.pre("findOneAndUpdate", setRunValidators)
     schema.pre("updateMany", setRunValidators)
@@ -43,7 +43,7 @@ mongoose
   .catch(e => {
     Logger.info("Mongoose connection error")
     Logger.error(e)
-  })
+  })}
 
 // CONNECTION EVENTS
 // When successfully connected

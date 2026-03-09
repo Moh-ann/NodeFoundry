@@ -5,8 +5,9 @@
   "moduleResolution": "node",
   "type": "module",
   "scripts": {
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "dev": "tsc-watch --onSuccess \"node dist/server.js\"",
+    "test": "NODE_ENV=test vitest --run",
     "build": "tsc",
     "create:apikey": "node dist/database/seedApiKey.js"
   },
@@ -39,6 +40,9 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.2.3",
-    "nodemon": "^3.1.7"
+    "@types/supertest": "^7.2.0",
+    "nodemon": "^3.1.7",
+    "supertest": "^7.2.2",
+    "vitest": "^4.0.18"
   }
 }
