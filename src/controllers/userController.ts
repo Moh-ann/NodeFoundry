@@ -13,6 +13,8 @@ import { createTokens, getAccessToken, validateTokenData } from "../auth/utils.j
 import JWT from "../core/JWT.js"
 import { Types } from "mongoose"
 import { KeyStoreModel } from "../models/KeyStoreModel.js"
+import getRole from "./roleController.js"
+import { RoleCode } from "../models/roleModel.js"
 
 const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
   const { email, password } = req.body
@@ -67,7 +69,7 @@ const registerUser = asyncHandler(async (req: ProtectedRequest, res: Response) =
     return
   }
 
-  const user = await User.create({ name, email, password })
+  const user = await User.create({ name, email, password, roles: [await getRole(RoleCode.USER)], })
 
   if (user) {
       const accessTokenKey = crypto.randomBytes(64).toString("hex")
@@ -79,13 +81,13 @@ const registerUser = asyncHandler(async (req: ProtectedRequest, res: Response) =
         httpOnly: true,
         secure: environment === "production",
         sameSite: "strict",
-        maxAge: 24 * 60 * 60 * 1000, //ms
+        maxAge: 24 * 60 * 60 * 1000, 
       })
       res.cookie("refreshToken", tokens.refreshToken, {
         httpOnly: true,
         secure: environment === "production",
         sameSite: "strict",
-        maxAge: 30 * 24 * 60 * 60 * 1000, //ms
+        maxAge: 30 * 24 * 60 * 60 * 1000, 
       })
       res.status(201)
       res.json({
@@ -144,7 +146,7 @@ export const refreshAccessToken = asyncHandler(
       httpOnly: true,
       secure: environment === "production",
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, //ms
+      maxAge: 24 * 60 * 60 * 1000, 
     })
 
     res.status(200).json({

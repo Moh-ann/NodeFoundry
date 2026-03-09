@@ -22,28 +22,35 @@ app.use("/api/users", userRoutes)
 app.use("/api/todo", todoRoutes)
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  if (err instanceof ApiError) {
-    ApiError.handle(err, res)
 
-    if (err.type === ErrorType.INTERNAL) {
-      Logger.error(
-        `500 - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`
-      )
-    } else {
-      Logger.error(
-        `500 - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`
-      )
-    }
+  if (err instanceof ApiError) {
+
+    Logger.error(
+      `${err.statusCode} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`
+    )
     Logger.error(err.stack)
 
     if (environment === "development") {
-      res.status(500).send({
-        message: err.message,
-        stack: err.stack,
+      return res.status(err.statusCode).json({
+        type: err.type,
+        message: err.message
+        // stack intentionally not sent to client
       })
     }
+
+    return ApiError.handle(err, res)
   }
-  ApiError.handle(new InternalError(), res)
+
+  Logger.error(err.stack)
+
+  if (environment === "development") {
+    return res.status(500).json({
+      type: "Internal",
+      message: err.message
+    })
+  }
+
+  return ApiError.handle(new InternalError(), res)
 })
 
 export default app

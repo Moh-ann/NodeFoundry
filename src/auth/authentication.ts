@@ -39,8 +39,16 @@ export default router.use(
         req.keystore = keystore
 
         next()
-      } catch (error) {
-        throw new TokenExpiredError("Token expired")
+      } catch (error: any) {
+        if (error.name === "TokenExpiredError") {
+          throw new TokenExpiredError("Token expired")
+        }
+
+        if (error.name === "JsonWebTokenError") {
+          throw new BadRequestError("Invalid token")
+        }
+
+        throw error
       }
     }
   )
