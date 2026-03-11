@@ -69,7 +69,9 @@ const registerUser = asyncHandler(async (req: ProtectedRequest, res: Response) =
     return
   }
 
-  const user = await User.create({ name, email, password, roles: [await getRole(RoleCode.USER)], })
+  const user = await User.create({ name, email, password,
+    roles: [await getRole(RoleCode.USER)],
+     })
 
   if (user) {
       const accessTokenKey = crypto.randomBytes(64).toString("hex")
@@ -89,8 +91,8 @@ const registerUser = asyncHandler(async (req: ProtectedRequest, res: Response) =
         sameSite: "strict",
         maxAge: 30 * 24 * 60 * 60 * 1000, 
       })
-      res.status(201)
-      res.json({
+      res.status(201).
+      json({
         _id: user._id,
         name: user.name,
         email: user.email,
