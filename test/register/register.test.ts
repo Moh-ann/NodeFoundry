@@ -4,6 +4,8 @@ import app from "../../src/app.js"
 import {MongoMemoryServer} from "mongodb-memory-server"
 import mongoose from "mongoose"
 import { RoleModel } from "../../src/models/roleModel.js"
+import JWT from "../../src/core/JWT.js"
+import { tokenInfo } from "../../src/config.js"
 
 let mongo: any
 
@@ -79,5 +81,51 @@ describe("Tests the register functionality", () => {
       .expect(400)
   })
 
-  
+  it("should set accessToken and refreshToken cookies on successful registration",
+  async () => {
+    const res = await request(app).post(endpoint).send(userPayload).expect(201)
+
+    expect(res.headers["set-cookie"]).toBeDefined()
+    const cookies = Array.isArray(res.headers["set-cookie"])
+      ? res.headers["set-cookie"]
+      : []
+    expect(
+      cookies.some((cookie: string) => cookie.startsWith("accessToken="))
+    ).toBe(true)
+    expect(
+      cookies.some((cookie: string) => cookie.startsWith("refreshToken="))
+    ).toBe(true)
+  })
+
+  it("should generate tokens with the correct payload", async () => {
+    const res = await request(app).post(endpoint).send(userPayload)
+
+    const cookies = Array.isArray(res.headers["set-cookie"])
+      ? res.headers["set-cookie"]
+      : []
+
+    const accessTokenCookie = cookies.find((cookie: string) =>
+      cookie.startsWith("accessToken=")
+    )
+    const refreshTokenCookie = cookies.find((cookie: string) =>
+      cookie.startsWith("refreshToken=")
+    )
+
+    expect(accessTokenCookie).toBeDefined()
+    expect(refreshTokenCookie).toBeDefined()
+
+    const accessToken = accessTokenCookie?.split(";")[0].split("=")[1]
+    const refreshToken = refreshTokenCookie?.split(";")[0].split("=")[1]
+
+    const decodedAccessToken = await JWT.decode(accessToken!)
+    const decodedRefreshToken = await JWT.decode(refreshToken!)
+
+    expect(decodedAccessToken.sub).toBeDefined()
+    expect(decodedAccessToken.iss).toBe(tokenInfo.issuer)
+    expect(decodedAccessToken.aud).toBe(tokenInfo.audience)
+
+    expect(decodedRefreshToken.sub).toBeDefined()
+    expect(decodedRefreshToken.iss).toBe(tokenInfo.issuer)
+    expect(decodedRefreshToken.aud).toBe(tokenInfo.audience)
+  })
 })
