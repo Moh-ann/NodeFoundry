@@ -7,34 +7,6 @@ import { RoleModel } from "../../src/models/roleModel.js"
 import JWT from "../../src/core/JWT.js"
 import { tokenInfo } from "../../src/config.js"
 
-let mongo: any
-
-beforeAll(async ()=> {
-    mongo = await MongoMemoryServer.create()
-    const mongoUri = mongo.getUri()
-    await mongoose.connect(mongoUri)
-}) 
-
-beforeEach(async () => {
-  const collections = await mongoose.connection?.db?.collections()
-  
-  if (!collections) return
-  for (let collection of collections) {
-    await collection.deleteMany({})
-  }
-  await RoleModel.create({
-      code: "USER",
-      status: true,
-    })
-})
-
-afterAll(async () => {
-    if (mongo) {
-        await mongo.stop()
-    }
-    await mongoose.connection.close()
-})
-
 describe("Tests the register functionality", () => {
  
   const endpoint = "/api/users/register"
