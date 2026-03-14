@@ -1,9 +1,6 @@
 import { it, describe, expect, beforeAll, beforeEach, afterAll} from "vitest"
 import request from "supertest"
 import app from "../../src/app.js"
-import {MongoMemoryServer} from "mongodb-memory-server"
-import mongoose from "mongoose"
-import { RoleModel } from "../../src/models/roleModel.js"
 import JWT from "../../src/core/JWT.js"
 import { tokenInfo } from "../../src/config.js"
 

@@ -57,7 +57,7 @@ const loginUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
 })
 
 const registerUser = asyncHandler(async (req: ProtectedRequest, res: Response) => {
-  try {
+  
     const { name, email, password } = req.body
 
     const userExists = await User.findOne({ email })
@@ -100,10 +100,7 @@ const registerUser = asyncHandler(async (req: ProtectedRequest, res: Response) =
     } else {
       throw new BadRequestError("Invalid user credentials")
     }
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: "Internal server error" })
-  }
+  
 })
 
 export const refreshAccessToken = asyncHandler(
